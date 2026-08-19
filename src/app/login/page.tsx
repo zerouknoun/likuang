@@ -78,7 +78,7 @@ export default function LoginPage() {
         });
 
         const data = await res.json();
-        if (!res.ok) throw new Error(data.message || "Gagal mengirim OTP");
+        if (!res.ok) throw new Error(data.error || data.message || "Gagal mengirim OTP");
         
         setStep(2);
       } else {
@@ -94,7 +94,7 @@ export default function LoginPage() {
         });
 
         const data = await res.json();
-        if (!res.ok) throw new Error(data.message || "Gagal mendaftar");
+        if (!res.ok) throw new Error(data.error || data.message || "Gagal mendaftar");
         
         setStep(2);
       }
