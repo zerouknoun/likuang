@@ -23,11 +23,24 @@ export default function LoginPage() {
   });
 
   const generatePassword = () => {
-    const chars = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!@#$%^&*";
+    const uppers = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+    const lowers = "abcdefghijklmnopqrstuvwxyz";
+    const numbers = "0123456789";
+    const specials = "!@#$%^&*()_+";
+    const all = uppers + lowers + numbers + specials;
+    
     let newPassword = "";
-    for (let i = 0; i < 12; i++) {
-      newPassword += chars.charAt(Math.floor(Math.random() * chars.length));
+    newPassword += uppers.charAt(Math.floor(Math.random() * uppers.length));
+    newPassword += numbers.charAt(Math.floor(Math.random() * numbers.length));
+    newPassword += specials.charAt(Math.floor(Math.random() * specials.length));
+    
+    for (let i = 0; i < 9; i++) {
+      newPassword += all.charAt(Math.floor(Math.random() * all.length));
     }
+    
+    // Acak password
+    newPassword = newPassword.split('').sort(() => 0.5 - Math.random()).join('');
+    
     setFormData({ ...formData, password: newPassword, confirmPassword: newPassword });
     setShowPassword(true);
   };
@@ -37,10 +50,19 @@ export default function LoginPage() {
     setLoading(true);
     setError("");
 
-    if (!isLogin && formData.password !== formData.confirmPassword) {
-      setError("Password tidak cocok");
-      setLoading(false);
-      return;
+    if (!isLogin) {
+      const passwordRegex = /^(?=.*[A-Z])(?=.*\d)(?=.*[^A-Za-z0-9]).{8,}$/;
+      if (!passwordRegex.test(formData.password)) {
+        setError("Password harus minimal 8 karakter, mengandung 1 huruf besar, 1 angka, dan 1 karakter unik.");
+        setLoading(false);
+        return;
+      }
+
+      if (formData.password !== formData.confirmPassword) {
+        setError("Password tidak cocok");
+        setLoading(false);
+        return;
+      }
     }
 
     try {
