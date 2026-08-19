@@ -20,7 +20,8 @@ function getAdminDb() {
 const adminDb = new Proxy({}, {
   get: (target, prop) => {
     const db = getAdminDb();
-    return (db as any)[prop];
+    const value = (db as any)[prop];
+    return typeof value === 'function' ? value.bind(db) : value;
   }
 }) as admin.firestore.Firestore;
 
