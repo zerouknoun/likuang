@@ -1,20 +1,27 @@
 import * as admin from 'firebase-admin';
 
-if (!admin.apps.length) {
-  try {
+function getAdminDb() {
+  if (!admin.apps.length) {
+    if (!process.env.FIREBASE_PROJECT_ID || !process.env.FIREBASE_PRIVATE_KEY || !process.env.FIREBASE_CLIENT_EMAIL) {
+      throw new Error("⚠️ FIREBASE ADMIN VARIABLES ARE MISSING! Pastikan Anda sudah memasukkan FIREBASE_PROJECT_ID, FIREBASE_CLIENT_EMAIL, dan FIREBASE_PRIVATE_KEY di Vercel Environment Variables.");
+    }
+
     admin.initializeApp({
       credential: admin.credential.cert({
         projectId: process.env.FIREBASE_PROJECT_ID,
         clientEmail: process.env.FIREBASE_CLIENT_EMAIL,
-        // Replace escaped newlines if passed in via env variable
         privateKey: process.env.FIREBASE_PRIVATE_KEY?.replace(/\\n/g, '\n'),
       }),
     });
-  } catch (error: any) {
-    console.error('Firebase admin initialization error', error.stack);
   }
+  return admin.firestore();
 }
 
-const adminDb = admin.firestore();
+const adminDb = new Proxy({}, {
+  get: (target, prop) => {
+    const db = getAdminDb();
+    return (db as any)[prop];
+  }
+}) as admin.firestore.Firestore;
 
 export { admin, adminDb };
