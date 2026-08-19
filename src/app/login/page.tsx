@@ -234,7 +234,7 @@ export default function LoginPage() {
                   className="w-full flex justify-center items-center gap-2 py-3 px-4 border border-transparent rounded-xl shadow-sm text-sm font-semibold text-white bg-indigo-600 hover:bg-indigo-500 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 focus:ring-offset-slate-900 transition-all disabled:opacity-50"
                 >
                   {loading ? <Loader2 className="w-5 h-5 animate-spin" /> : (
-                    <>Verifikasi & Masuk <CheckCircle2 className="w-4 h-4" /></>
+                    <>Login <CheckCircle2 className="w-4 h-4" /></>
                   )}
                 </button>
                 <button
