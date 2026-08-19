@@ -16,13 +16,26 @@ export async function POST(req: NextRequest) {
     }
 
     const usersRef = adminDb.collection("users");
-    const snapshot = await usersRef.where("email", "==", email).get();
+    let snapshot = await usersRef.where("email", "==", email).get();
 
-    if (snapshot.empty) {
+    let userDoc: any;
+    let isPending = false;
+
+    if (!snapshot.empty) {
+      userDoc = snapshot.docs[0];
+    } else {
+      const pendingRef = adminDb.collection("pending_users").doc(email);
+      const pendingDoc = await pendingRef.get();
+      if (pendingDoc.exists) {
+        userDoc = pendingDoc;
+        isPending = true;
+      }
+    }
+
+    if (!userDoc) {
       return NextResponse.json({ message: "Email tidak ditemukan" }, { status: 404 });
     }
 
-    const userDoc = snapshot.docs[0];
     const user = userDoc.data();
 
     const isMatch = await bcrypt.compare(password, user.password);

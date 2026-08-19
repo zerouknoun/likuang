@@ -16,14 +16,28 @@ export const authOptions: NextAuthOptions = {
         }
 
         const usersRef = adminDb.collection("users");
-        const snapshot = await usersRef.where("email", "==", credentials.email).get();
+        let snapshot = await usersRef.where("email", "==", credentials.email).get();
 
-        if (snapshot.empty) {
+        let userDoc: any;
+        let isPending = false;
+
+        if (!snapshot.empty) {
+          userDoc = snapshot.docs[0];
+        } else {
+          // Cari di pending_users
+          const pendingRef = adminDb.collection("pending_users").doc(credentials.email);
+          const pendingDoc = await pendingRef.get();
+          if (pendingDoc.exists) {
+            userDoc = pendingDoc;
+            isPending = true;
+          }
+        }
+
+        if (!userDoc) {
           throw new Error("Email tidak ditemukan");
         }
 
-        const userDoc = snapshot.docs[0];
-        const user = userDoc.data();
+        let user = userDoc.data();
 
         if (!user.otpCode || !user.otpExpires) {
           throw new Error("Sesi OTP tidak valid, silakan ulangi login");
@@ -37,11 +51,27 @@ export const authOptions: NextAuthOptions = {
           throw new Error("Kode OTP salah");
         }
 
-        // OTP is correct, clear it from DB
-        await userDoc.ref.update({
-          otpCode: admin.firestore.FieldValue.delete(),
-          otpExpires: admin.firestore.FieldValue.delete(),
-        });
+        // OTP is correct
+        if (isPending) {
+          // Move to users
+          const newUserRef = usersRef.doc();
+          const { otpCode, otpExpires, ...userData } = user;
+          await newUserRef.set({
+            ...userData,
+            isVerified: true,
+            verifiedAt: admin.firestore.FieldValue.serverTimestamp(),
+          });
+          // Delete from pending
+          await userDoc.ref.delete();
+          // Update userDoc for return
+          userDoc = { id: newUserRef.id }; 
+        } else {
+          // Clear OTP from DB
+          await userDoc.ref.update({
+            otpCode: admin.firestore.FieldValue.delete(),
+            otpExpires: admin.firestore.FieldValue.delete(),
+          });
+        }
 
         return {
           id: userDoc.id,

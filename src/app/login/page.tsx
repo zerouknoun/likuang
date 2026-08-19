@@ -130,6 +130,28 @@ export default function LoginPage() {
     }
   };
 
+  const handleResendOTP = async () => {
+    setLoading(true);
+    setError("");
+    try {
+      const res = await fetch("/api/auth/send-otp", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          email: formData.email,
+          password: formData.password,
+        }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || data.message || "Gagal mengirim ulang OTP");
+      alert("OTP berhasil dikirim ulang ke email Anda!");
+    } catch (err: any) {
+      setError(err.message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   return (
     <div className="min-h-screen bg-slate-950 flex flex-col justify-center py-12 sm:px-6 lg:px-8 font-[family-name:var(--font-geist-sans)] relative overflow-hidden">
       {/* Abstract Backgrounds */}
@@ -329,6 +351,14 @@ export default function LoginPage() {
                   {loading ? <Loader2 className="w-5 h-5 animate-spin" /> : (
                     <>Login <CheckCircle2 className="w-4 h-4" /></>
                   )}
+                </button>
+                <button
+                  type="button"
+                  onClick={handleResendOTP}
+                  disabled={loading}
+                  className="text-sm text-indigo-400 hover:text-indigo-300 transition-colors text-center py-2 disabled:opacity-50"
+                >
+                  Kirim Ulang OTP
                 </button>
                 <button
                   type="button"

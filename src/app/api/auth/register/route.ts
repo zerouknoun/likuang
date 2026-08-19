@@ -23,7 +23,8 @@ export async function POST(req: NextRequest) {
     const otpCode = Math.floor(100000 + Math.random() * 900000).toString();
     const otpExpires = new Date(Date.now() + 10 * 60 * 1000); // 10 minutes
 
-    const newUserRef = usersRef.doc();
+    // Simpan ke pending_users dengan ID = email
+    const pendingUsersRef = adminDb.collection("pending_users").doc(email);
     const newUserData = {
       name,
       email,
@@ -33,7 +34,7 @@ export async function POST(req: NextRequest) {
       createdAt: admin.firestore.FieldValue.serverTimestamp(),
     };
     
-    await newUserRef.set(newUserData);
+    await pendingUsersRef.set(newUserData);
 
     // Send Email
     try {
@@ -67,7 +68,7 @@ export async function POST(req: NextRequest) {
       console.error("Gagal mengirim email saat registrasi:", emailErr);
     }
 
-    return NextResponse.json({ message: "Berhasil mendaftar, silakan periksa email untuk OTP", user: { id: newUserRef.id, name, email } }, { status: 201 });
+    return NextResponse.json({ message: "Berhasil mendaftar, silakan periksa email untuk OTP", user: { id: pendingUsersRef.id, name, email } }, { status: 201 });
   } catch (error: any) {
     console.error("Register Error:", error);
     return NextResponse.json({ message: "Terjadi kesalahan server", error: error.message }, { status: 500 });
