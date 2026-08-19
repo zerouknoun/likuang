@@ -4,7 +4,7 @@ import { useState } from "react";
 import { signIn } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { LinkIcon, ArrowRight, Loader2, Mail, CheckCircle2 } from "lucide-react";
+import { LinkIcon, ArrowRight, Loader2, Mail, CheckCircle2, XCircle, Eye, EyeOff, RefreshCw } from "lucide-react";
 
 export default function LoginPage() {
   const router = useRouter();
@@ -12,18 +12,36 @@ export default function LoginPage() {
   const [step, setStep] = useState(1); // 1: Email/Password, 2: OTP
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
 
   const [formData, setFormData] = useState({
     name: "",
     email: "",
     password: "",
+    confirmPassword: "",
     otp: "",
   });
+
+  const generatePassword = () => {
+    const chars = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!@#$%^&*";
+    let newPassword = "";
+    for (let i = 0; i < 12; i++) {
+      newPassword += chars.charAt(Math.floor(Math.random() * chars.length));
+    }
+    setFormData({ ...formData, password: newPassword, confirmPassword: newPassword });
+    setShowPassword(true);
+  };
 
   const handleStep1Submit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
     setError("");
+
+    if (!isLogin && formData.password !== formData.confirmPassword) {
+      setError("Password tidak cocok");
+      setLoading(false);
+      return;
+    }
 
     try {
       if (isLogin) {
@@ -181,21 +199,74 @@ export default function LoginPage() {
               </div>
 
               <div>
-                <label htmlFor="password" className="block text-sm font-medium text-slate-300">
-                  Password
-                </label>
-                <div className="mt-1">
+                <div className="flex justify-between items-center">
+                  <label htmlFor="password" className="block text-sm font-medium text-slate-300">
+                    Password
+                  </label>
+                  {!isLogin && (
+                    <button
+                      type="button"
+                      onClick={generatePassword}
+                      className="text-xs flex items-center gap-1 text-indigo-400 hover:text-indigo-300 transition-colors"
+                    >
+                      <RefreshCw className="w-3 h-3" /> Auto-generate
+                    </button>
+                  )}
+                </div>
+                <div className="mt-1 relative">
                   <input
                     id="password"
-                    type="password"
+                    type={showPassword ? "text" : "password"}
                     required
                     value={formData.password}
                     onChange={(e) => setFormData({ ...formData, password: e.target.value })}
-                    className="appearance-none block w-full px-4 py-3 border border-slate-700 rounded-xl bg-slate-950 text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-all"
+                    className="appearance-none block w-full px-4 py-3 pr-12 border border-slate-700 rounded-xl bg-slate-950 text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-all"
                     placeholder="••••••••"
                   />
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword(!showPassword)}
+                    className="absolute inset-y-0 right-0 pr-4 flex items-center text-slate-400 hover:text-slate-300"
+                  >
+                    {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+                  </button>
                 </div>
               </div>
+
+              {!isLogin && (
+                <div>
+                  <label htmlFor="confirmPassword" className="block text-sm font-medium text-slate-300">
+                    Confirm Password
+                  </label>
+                  <div className="mt-1 relative">
+                    <input
+                      id="confirmPassword"
+                      type={showPassword ? "text" : "password"}
+                      required
+                      value={formData.confirmPassword}
+                      onChange={(e) => setFormData({ ...formData, confirmPassword: e.target.value })}
+                      className="appearance-none block w-full px-4 py-3 pr-20 border border-slate-700 rounded-xl bg-slate-950 text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-all"
+                      placeholder="••••••••"
+                    />
+                    <div className="absolute inset-y-0 right-0 pr-4 flex items-center gap-2">
+                      {formData.confirmPassword.length > 0 && (
+                        formData.password === formData.confirmPassword ? (
+                          <CheckCircle2 className="w-5 h-5 text-green-500" />
+                        ) : (
+                          <XCircle className="w-5 h-5 text-red-500" />
+                        )
+                      )}
+                      <button
+                        type="button"
+                        onClick={() => setShowPassword(!showPassword)}
+                        className="text-slate-400 hover:text-slate-300"
+                      >
+                        {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              )}
 
               <button
                 type="submit"
