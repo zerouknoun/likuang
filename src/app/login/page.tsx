@@ -1,13 +1,20 @@
 "use client";
 
-import { useState } from "react";
-import { signIn } from "next-auth/react";
+import { useState, useEffect } from "react";
+import { signIn, useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { LinkIcon, ArrowRight, Loader2, Mail, CheckCircle2, XCircle, Eye, EyeOff, RefreshCw } from "lucide-react";
 
 export default function LoginPage() {
   const router = useRouter();
+  const { status } = useSession();
+
+  useEffect(() => {
+    if (status === "authenticated") {
+      router.push("/dashboard");
+    }
+  }, [status, router]);
   const [isLogin, setIsLogin] = useState(true);
   const [step, setStep] = useState(1); // 1: Email/Password, 2: OTP
   const [loading, setLoading] = useState(false);
@@ -67,20 +74,33 @@ export default function LoginPage() {
 
     try {
       if (isLogin) {
-        // Request OTP for Login
-        const res = await fetch("/api/auth/send-otp", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            email: formData.email,
-            password: formData.password,
-          }),
+        // Coba login langsung dengan password
+        const res = await signIn("credentials", {
+          redirect: false,
+          email: formData.email,
+          password: formData.password,
         });
 
-        const data = await res.json();
-        if (!res.ok) throw new Error(data.error || data.message || "Gagal mengirim OTP");
-        
-        setStep(2);
+        if (res?.error === "REQUIRE_OTP") {
+          // Harus verifikasi OTP
+          const otpRes = await fetch("/api/auth/send-otp", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              email: formData.email,
+              password: formData.password,
+            }),
+          });
+          const data = await otpRes.json();
+          if (!otpRes.ok) throw new Error(data.error || data.message || "Gagal mengirim OTP");
+          setStep(2);
+        } else if (res?.error) {
+          throw new Error(res.error);
+        } else {
+          // Berhasil login tanpa OTP
+          router.push("/dashboard");
+          router.refresh();
+        }
       } else {
         // Register new user (which also sends OTP)
         const res = await fetch("/api/auth/register", {
