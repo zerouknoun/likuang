@@ -12,7 +12,8 @@ import {
   Plus, 
   Copy, 
   ExternalLink, 
-  Loader2 
+  Loader2,
+  Trash2
 } from "lucide-react";
 
 export default function Dashboard() {
@@ -78,6 +79,26 @@ export default function Dashboard() {
   const copyToClipboard = (text: string) => {
     navigator.clipboard.writeText(text);
     alert("Copied to clipboard!");
+  };
+
+  const handleDeleteLink = async (id: string) => {
+    if (!confirm("Apakah Anda yakin ingin menghapus link ini?")) return;
+    try {
+      const res = await fetch("/api/link/delete", {
+        method: "DELETE",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ id }),
+      });
+      const data = await res.json();
+      if (data.success) {
+        fetchData();
+      } else {
+        alert(data.error || "Gagal menghapus link");
+      }
+    } catch (error) {
+      console.error(error);
+      alert("Terjadi kesalahan sistem saat menghapus");
+    }
   };
 
   if (status === "loading" || loading) {
@@ -238,6 +259,13 @@ export default function Dashboard() {
                             >
                               <ExternalLink className="w-4 h-4" />
                             </Link>
+                            <button
+                              onClick={() => handleDeleteLink(link._id)}
+                              className="text-slate-400 hover:text-red-500 transition-colors p-1"
+                              title="Delete link"
+                            >
+                              <Trash2 className="w-4 h-4" />
+                            </button>
                           </div>
                         </td>
                       </tr>
