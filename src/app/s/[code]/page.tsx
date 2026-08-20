@@ -131,7 +131,7 @@ export default function WaitPage() {
           <p className="text-slate-500 text-sm">Dipublikasikan untuk Anda sambil menyiapkan tautan tujuan</p>
         </div>
 
-        {/* Ad Banner HTML Space */}
+        {/* Ad Banner HTML Space - Slot 1 (Atas) */}
         <div className="my-8 w-full flex justify-center items-center overflow-hidden rounded-xl bg-slate-50/50">
           <div data-banner-id="1499415"></div>
         </div>
@@ -179,6 +179,11 @@ export default function WaitPage() {
             </li>
           </ol>
 
+          {/* Ad Banner HTML Space - Slot 2 (Tengah) */}
+          <div className="my-8 w-full flex justify-center items-center overflow-hidden rounded-xl bg-slate-50/50">
+            <div data-banner-id="1499415"></div>
+          </div>
+
           <h3 className="text-xl font-bold text-slate-900 mt-8 mb-4 border-b pb-2">Tips Tambahan:</h3>
           <ul className="list-disc pl-5 space-y-2">
             <li><strong>Wedang Jahe Susu:</strong> Jika Anda menyukai rasa yang lebih <i>creamy</i>, Anda bisa menambahkan sedikit susu kental manis atau susu evaporasi ke dalam gelas saji sebelum menuangkan wedang jahe.</li>
@@ -188,6 +193,11 @@ export default function WaitPage() {
           <p className="p-4 bg-indigo-50 text-indigo-900 rounded-lg italic mt-8 border border-indigo-100">
             Wedang jahe kini siap dinikmati. Aroma rempahnya yang menguar perlahan dan sensasi hangat saat minuman ini mengalir di tenggorokan dijamin mampu memberikan relaksasi instan setelah beraktivitas seharian. Selamat mencoba!
           </p>
+
+          {/* Ad Banner HTML Space - Slot 3 (Bawah) */}
+          <div className="my-8 w-full flex justify-center items-center overflow-hidden rounded-xl bg-slate-50/50">
+            <div data-banner-id="1499415"></div>
+          </div>
         </div>
 
         {/* Action / Timer Section at the bottom */}
