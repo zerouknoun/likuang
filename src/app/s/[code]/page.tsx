@@ -64,10 +64,62 @@ export default function WaitPage() {
           Please wait a moment while we securely process your destination link and ensure your safety.
         </p>
 
-        {/* Dummy Ad Slot */}
-        <div className="w-full h-24 sm:h-32 bg-slate-800/50 border border-slate-700/50 rounded-xl mb-8 flex items-center justify-center overflow-hidden relative">
-          <span className="text-slate-500 text-sm font-medium tracking-widest uppercase">Advertisement Space</span>
-          <div className="absolute top-0 left-0 w-full h-full bg-gradient-to-r from-transparent via-white/5 to-transparent -translate-x-full animate-[shimmer_2s_infinite]" />
+        {/* Article Content / Ad Space */}
+        <div className="w-full bg-slate-900/40 border border-slate-700/50 rounded-2xl p-6 sm:p-8 mb-8 text-left max-h-[400px] overflow-y-auto">
+          <h2 className="text-xl sm:text-2xl font-bold text-white mb-4 leading-snug">
+            Hangat dan Menyehatkan: Panduan Lengkap Cara Membuat Wedang Jahe Tradisional
+          </h2>
+          <div className="text-slate-300 text-sm sm:text-base leading-relaxed space-y-4">
+            <p>
+              Di tengah cuaca yang sejuk atau saat tubuh terasa kurang fit, segelas minuman hangat sering kali menjadi solusi yang paling dicari. Salah satu minuman tradisional Nusantara yang tak pernah lekang oleh waktu adalah wedang jahe. Selain memberikan efek hangat yang menenangkan, wedang jahe juga kaya akan manfaat kesehatan, seperti meredakan mual, melancarkan pencernaan, dan meningkatkan sistem kekebalan tubuh.
+            </p>
+            <p>
+              Membuat wedang jahe di rumah sangatlah mudah dan tidak membutuhkan banyak bahan. Keunggulannya, Anda bisa menyesuaikan tingkat kepekatan rasa jahe dan manisnya sesuai dengan selera pribadi. Berikut adalah panduan langkah demi langkah untuk meracik wedang jahe yang nikmat dan beraroma.
+            </p>
+            
+            <h3 className="text-lg font-semibold text-indigo-400 mt-6 mb-2">Bahan-bahan yang Diperlukan:</h3>
+            <ul className="list-disc pl-5 space-y-2">
+              <li><strong>Jahe segar:</strong> 2 ruas (sekitar 5-7 cm). Anda bisa menggunakan jahe biasa atau jahe merah jika menginginkan rasa pedas dan efek hangat yang lebih kuat.</li>
+              <li><strong>Air mineral:</strong> 500 ml (sekitar 2 gelas).</li>
+              <li><strong>Gula merah atau gula aren:</strong> 50 gram (bisa disesuaikan selera). Alternatif lain, Anda bisa menggunakan madu sebagai pemanis alami.</li>
+              <li><strong>Serai:</strong> 1 batang, memarkan (opsional, untuk menambah aroma).</li>
+              <li><strong>Daun pandan:</strong> 1 lembar, ikat simpul (opsional).</li>
+              <li><strong>Kayu manis:</strong> 1 batang kecil (opsional, memberikan sentuhan aroma rempah yang manis).</li>
+            </ul>
+
+            <h3 className="text-lg font-semibold text-indigo-400 mt-6 mb-2">Langkah-langkah Pembuatan:</h3>
+            <ol className="list-decimal pl-5 space-y-4">
+              <li>
+                <strong>Persiapkan Jahe dengan Tepat</strong><br/>
+                Kunci dari wedang jahe yang lezat ada pada persiapan jahenya. Cuci bersih jahe dari sisa tanah. Untuk mengeluarkan aroma dan minyak atsirinya secara maksimal, bakar jahe di atas api kompor selama 1-2 menit hingga kulitnya sedikit menghitam. Setelah itu, kupas kulitnya (atau biarkan saja jika sudah dicuci sangat bersih) dan memarkan (geprek) jahe hingga pipih.
+              </li>
+              <li>
+                <strong>Rebus Bahan-bahan Aromatik</strong><br/>
+                Siapkan panci kecil, lalu masukkan air mineral. Tambahkan jahe yang sudah digeprek, batang serai yang sudah dimemarkan, daun pandan, dan kayu manis. Nyalakan kompor dengan api sedang.
+              </li>
+              <li>
+                <strong>Proses Pemanasan dan Ekstraksi</strong><br/>
+                Biarkan air direbus hingga mendidih. Setelah mendidih, turunkan api menjadi kecil dan biarkan rebusan tersebut mendidih perlahan (simmer) selama sekitar 10-15 menit. Proses ini bertujuan untuk mengekstrak seluruh rasa, aroma, dan khasiat dari jahe serta rempah lainnya agar menyatu sempurna dengan air. Air rebusan perlahan akan berubah warna menjadi agak kecokelatan.
+              </li>
+              <li>
+                <strong>Tambahkan Pemanis</strong><br/>
+                Masukkan gula merah atau gula aren yang sudah disisir halus agar lebih cepat larut. Aduk perlahan hingga seluruh gula mencair dan menyatu dengan kuah jahe. Jika Anda memilih menggunakan madu, jangan masukkan madu saat air masih mendidih di atas kompor agar nutrisi madu tidak rusak. Matikan api terlebih dahulu, tunggu sejenak hingga suhu sedikit turun, barulah tambahkan madu dan aduk rata.
+              </li>
+              <li>
+                <strong>Saring dan Sajikan</strong><br/>
+                Matikan api. Siapkan gelas saji dan saringan. Tuang wedang jahe melalui saringan untuk memisahkan ampas rempah-rempahnya, sehingga Anda mendapatkan minuman yang bersih dan nyaman saat diteguk.
+              </li>
+            </ol>
+
+            <h3 className="text-lg font-semibold text-indigo-400 mt-6 mb-2">Tips Tambahan:</h3>
+            <ul className="list-disc pl-5 space-y-2">
+              <li><strong>Wedang Jahe Susu:</strong> Jika Anda menyukai rasa yang lebih <i>creamy</i>, Anda bisa menambahkan sedikit susu kental manis atau susu evaporasi ke dalam gelas saji sebelum menuangkan wedang jahe.</li>
+              <li><strong>Penyimpanan:</strong> Jika membuat dalam jumlah banyak, wedang jahe (tanpa madu/susu) bisa disimpan di dalam kulkas dan dipanaskan kembali keesokan harinya, rasanya bahkan akan terasa lebih pekat.</li>
+            </ul>
+            <p className="pt-4 border-t border-slate-800/60 text-slate-400 italic">
+              Wedang jahe kini siap dinikmati. Aroma rempahnya yang menguar perlahan dan sensasi hangat saat minuman ini mengalir di tenggorokan dijamin mampu memberikan relaksasi instan setelah beraktivitas seharian. Selamat mencoba!
+            </p>
+          </div>
         </div>
 
         {/* Timer / Button Area */}
