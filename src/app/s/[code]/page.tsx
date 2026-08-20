@@ -69,6 +69,11 @@ export default function WaitPage() {
           <p className="text-slate-500 text-sm">Dipublikasikan untuk Anda sambil menyiapkan tautan tujuan</p>
         </div>
 
+        {/* Ad Banner HTML Space */}
+        <div className="my-8 w-full flex justify-center items-center overflow-hidden rounded-xl bg-slate-50/50">
+          <div data-banner-id="1499410"></div>
+        </div>
+
         {/* Article Content */}
         <div className="prose prose-slate max-w-none text-slate-700 text-base leading-relaxed space-y-6">
           <p>
