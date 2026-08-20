@@ -19,17 +19,22 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ code
     const ip = req.headers.get("x-forwarded-for") || "127.0.0.1";
 
     const clickLogsRef = adminDb.collection("clickLogs");
-    
-    // Calculate 24 hours ago timestamp
     const twentyFourHoursAgo = new Date(Date.now() - 24 * 60 * 60 * 1000);
     
-    const existingClick = await clickLogsRef
+    // Ambil klik berdasarkan linkId saja (Firestore tidak butuh composite index untuk ini)
+    const existingClickSnapshot = await clickLogsRef
       .where("linkId", "==", linkDoc.id)
-      .where("ipAddress", "==", ip)
-      .where("clickedAt", ">", admin.firestore.Timestamp.fromDate(twentyFourHoursAgo))
       .get();
 
-    if (existingClick.empty) {
+    // Filter sisanya (IP dan Waktu) secara manual di memori server
+    const hasRecentClick = existingClickSnapshot.docs.some(doc => {
+      const data = doc.data();
+      if (data.ipAddress !== ip) return false;
+      const clickedAt = data.clickedAt?.toDate() || new Date(0);
+      return clickedAt > twentyFourHoursAgo;
+    });
+
+    if (!hasRecentClick) {
       const EARNING_PER_CLICK = 15; // Rp 15 per click
       
       const batch = adminDb.batch();
