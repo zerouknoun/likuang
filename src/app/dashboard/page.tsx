@@ -13,7 +13,13 @@ import {
   Copy, 
   ExternalLink, 
   Loader2,
-  Trash2
+  Trash2,
+  X,
+  Clock,
+  CheckCircle2,
+  XCircle,
+  Building,
+  Smartphone
 } from "lucide-react";
 
 export default function Dashboard() {
@@ -26,6 +32,20 @@ export default function Dashboard() {
 
   const [newUrl, setNewUrl] = useState("");
   const [creating, setCreating] = useState(false);
+
+  const [withdrawals, setWithdrawals] = useState<any[]>([]);
+  const [showWithdrawModal, setShowWithdrawModal] = useState(false);
+  const [withdrawing, setWithdrawing] = useState(false);
+  const [withdrawData, setWithdrawData] = useState({
+    amount: "",
+    methodType: "BANK",
+    provider: "BCA",
+    accountNumber: "",
+    accountName: ""
+  });
+
+  const BANK_OPTIONS = ["BCA", "Mandiri", "BNI", "BRI", "BSI", "CIMB Niaga"];
+  const EWALLET_OPTIONS = ["GoPay", "OVO", "DANA", "ShopeePay", "LinkAja"];
 
   useEffect(() => {
     if (status === "unauthenticated") {
@@ -41,7 +61,8 @@ export default function Dashboard() {
       const data = await res.json();
       if (data.success) {
         setStats({ user: data.user, totalClicks: data.stats.totalClicks });
-        setLinks(data.links);
+        setLinks(data.links || []);
+        setWithdrawals(data.withdrawals || []);
       }
     } catch (error) {
       console.error(error);
@@ -73,6 +94,48 @@ export default function Dashboard() {
       alert("Terjadi kesalahan");
     } finally {
       setCreating(false);
+    }
+  };
+
+  const handleWithdraw = async (e: React.FormEvent) => {
+    e.preventDefault();
+    const amount = parseInt(withdrawData.amount, 10);
+    if (isNaN(amount) || amount < 50000) {
+      alert("Minimal pencairan adalah Rp 50.000");
+      return;
+    }
+    if (amount > (stats?.user?.balance || 0)) {
+      alert("Saldo tidak mencukupi");
+      return;
+    }
+
+    setWithdrawing(true);
+    try {
+      const res = await fetch("/api/user/withdraw", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(withdrawData),
+      });
+      const data = await res.json();
+      if (data.success) {
+        alert("Permintaan pencairan berhasil dibuat!");
+        setShowWithdrawModal(false);
+        setWithdrawData({
+          amount: "",
+          methodType: "BANK",
+          provider: "BCA",
+          accountNumber: "",
+          accountName: ""
+        });
+        fetchData(); // Refresh balance & history
+      } else {
+        alert(data.error || "Gagal membuat permintaan pencairan");
+      }
+    } catch (error) {
+      console.error(error);
+      alert("Terjadi kesalahan sistem");
+    } finally {
+      setWithdrawing(false);
     }
   };
 
@@ -156,9 +219,19 @@ export default function Dashboard() {
               </div>
               <h2 className="text-lg font-medium text-slate-300">Total Earnings</h2>
             </div>
-            <p className="text-4xl font-bold text-white tracking-tight">
+            <p className="text-4xl font-bold text-white tracking-tight mb-4">
               {formatCurrency(stats?.user?.balance || 0)}
             </p>
+            <button
+              onClick={() => {
+                const bal = stats?.user?.balance || 0;
+                setWithdrawData(prev => ({ ...prev, amount: bal >= 50000 ? bal.toString() : "" }));
+                setShowWithdrawModal(true);
+              }}
+              className="px-4 py-2 bg-indigo-600 hover:bg-indigo-500 text-white text-sm font-medium rounded-lg transition-colors shadow-lg shadow-indigo-500/20"
+            >
+              Tarik Saldo
+            </button>
           </div>
 
           <div className="bg-gradient-to-br from-emerald-900/50 to-slate-900/50 border border-emerald-500/20 rounded-2xl p-6 relative overflow-hidden">
@@ -276,7 +349,176 @@ export default function Dashboard() {
             </table>
           </div>
         </div>
+
+        {/* Withdrawals Table */}
+        <div className="bg-slate-900/60 border border-slate-800 rounded-2xl overflow-hidden mt-8">
+          <div className="p-6 border-b border-slate-800">
+            <h3 className="text-lg font-semibold">Riwayat Pencairan</h3>
+          </div>
+          <div className="overflow-x-auto">
+            <table className="w-full text-left text-sm">
+              <thead className="bg-slate-800/50 text-slate-400">
+                <tr>
+                  <th className="px-6 py-4 font-medium">Tanggal</th>
+                  <th className="px-6 py-4 font-medium">Nominal</th>
+                  <th className="px-6 py-4 font-medium">Metode</th>
+                  <th className="px-6 py-4 font-medium">Tujuan</th>
+                  <th className="px-6 py-4 font-medium">Status</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-slate-800">
+                {withdrawals.length === 0 ? (
+                  <tr>
+                    <td colSpan={5} className="px-6 py-8 text-center text-slate-500">
+                      Belum ada riwayat pencairan.
+                    </td>
+                  </tr>
+                ) : (
+                  withdrawals.map((w) => (
+                    <tr key={w._id} className="hover:bg-slate-800/30 transition-colors">
+                      <td className="px-6 py-4 text-slate-400">
+                        {w.createdAt ? new Date(w.createdAt._seconds * 1000).toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' }) : '-'}
+                      </td>
+                      <td className="px-6 py-4 font-medium text-emerald-400">
+                        {formatCurrency(w.amount)}
+                      </td>
+                      <td className="px-6 py-4">
+                        <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-slate-800 text-slate-300 text-xs font-medium border border-slate-700">
+                          {w.methodType === 'BANK' ? <Building className="w-3 h-3" /> : <Smartphone className="w-3 h-3" />}
+                          {w.provider}
+                        </span>
+                      </td>
+                      <td className="px-6 py-4">
+                        <div className="text-white font-medium">{w.accountNumber}</div>
+                        <div className="text-xs text-slate-400">{w.accountName}</div>
+                      </td>
+                      <td className="px-6 py-4">
+                        {w.status === 'PENDING' && (
+                          <span className="inline-flex items-center gap-1.5 text-amber-400 bg-amber-400/10 px-2.5 py-1 rounded-full text-xs font-medium border border-amber-400/20">
+                            <Clock className="w-3 h-3" /> Diproses
+                          </span>
+                        )}
+                        {w.status === 'APPROVED' && (
+                          <span className="inline-flex items-center gap-1.5 text-emerald-400 bg-emerald-400/10 px-2.5 py-1 rounded-full text-xs font-medium border border-emerald-400/20">
+                            <CheckCircle2 className="w-3 h-3" /> Berhasil
+                          </span>
+                        )}
+                        {w.status === 'REJECTED' && (
+                          <span className="inline-flex items-center gap-1.5 text-red-400 bg-red-400/10 px-2.5 py-1 rounded-full text-xs font-medium border border-red-400/20">
+                            <XCircle className="w-3 h-3" /> Ditolak
+                          </span>
+                        )}
+                      </td>
+                    </tr>
+                  ))
+                )}
+              </tbody>
+            </table>
+          </div>
+        </div>
+
       </main>
+
+      {/* Withdraw Modal */}
+      {showWithdrawModal && (
+        <div className="fixed inset-0 z-[100] bg-slate-950/80 backdrop-blur-sm flex items-center justify-center p-4">
+          <div className="bg-slate-900 border border-slate-800 rounded-3xl p-6 w-full max-w-md shadow-2xl relative animate-in fade-in zoom-in-95 duration-200">
+            <button 
+              onClick={() => setShowWithdrawModal(false)}
+              className="absolute top-4 right-4 text-slate-500 hover:text-white transition-colors bg-slate-800/50 hover:bg-slate-800 p-2 rounded-full"
+            >
+              <X className="w-5 h-5" />
+            </button>
+            
+            <h3 className="text-xl font-bold text-white mb-6">Tarik Saldo</h3>
+            
+            <form onSubmit={handleWithdraw} className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-slate-400 mb-1">Nominal Pencairan</label>
+                <div className="relative">
+                  <span className="absolute left-4 top-3 text-slate-500 font-medium">Rp</span>
+                  <input
+                    type="number"
+                    required
+                    min="50000"
+                    max={stats?.user?.balance || 0}
+                    value={withdrawData.amount}
+                    onChange={(e) => setWithdrawData({ ...withdrawData, amount: e.target.value })}
+                    className="w-full bg-slate-950 border border-slate-700 rounded-xl pl-12 pr-4 py-3 text-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                    placeholder="50000"
+                  />
+                </div>
+                <p className="text-xs text-slate-500 mt-1">Minimal: Rp 50.000 | Saldo Anda: {formatCurrency(stats?.user?.balance || 0)}</p>
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-slate-400 mb-1">Metode</label>
+                  <select
+                    value={withdrawData.methodType}
+                    onChange={(e) => {
+                      const newType = e.target.value;
+                      setWithdrawData({
+                        ...withdrawData,
+                        methodType: newType,
+                        provider: newType === "BANK" ? BANK_OPTIONS[0] : EWALLET_OPTIONS[0]
+                      })
+                    }}
+                    className="w-full bg-slate-950 border border-slate-700 rounded-xl px-4 py-3 text-white focus:outline-none focus:ring-2 focus:ring-indigo-500 appearance-none"
+                  >
+                    <option value="BANK">Bank</option>
+                    <option value="EWALLET">E-Wallet</option>
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-slate-400 mb-1">Penyedia</label>
+                  <select
+                    value={withdrawData.provider}
+                    onChange={(e) => setWithdrawData({ ...withdrawData, provider: e.target.value })}
+                    className="w-full bg-slate-950 border border-slate-700 rounded-xl px-4 py-3 text-white focus:outline-none focus:ring-2 focus:ring-indigo-500 appearance-none"
+                  >
+                    {(withdrawData.methodType === "BANK" ? BANK_OPTIONS : EWALLET_OPTIONS).map(opt => (
+                      <option key={opt} value={opt}>{opt}</option>
+                    ))}
+                  </select>
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-slate-400 mb-1">Nomor Rekening / HP</label>
+                <input
+                  type="text"
+                  required
+                  value={withdrawData.accountNumber}
+                  onChange={(e) => setWithdrawData({ ...withdrawData, accountNumber: e.target.value })}
+                  className="w-full bg-slate-950 border border-slate-700 rounded-xl px-4 py-3 text-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                  placeholder={withdrawData.methodType === "BANK" ? "Nomor Rekening" : "Nomor HP"}
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-slate-400 mb-1">Nama Pemilik Rekening</label>
+                <input
+                  type="text"
+                  required
+                  value={withdrawData.accountName}
+                  onChange={(e) => setWithdrawData({ ...withdrawData, accountName: e.target.value.toUpperCase() })}
+                  className="w-full bg-slate-950 border border-slate-700 rounded-xl px-4 py-3 text-white focus:outline-none focus:ring-2 focus:ring-indigo-500 uppercase"
+                  placeholder="JOHN DOE"
+                />
+              </div>
+
+              <button
+                type="submit"
+                disabled={withdrawing || parseInt(withdrawData.amount || '0') < 50000 || parseInt(withdrawData.amount || '0') > (stats?.user?.balance || 0)}
+                className="w-full bg-indigo-600 hover:bg-indigo-500 text-white py-3 rounded-xl font-bold mt-4 transition-all shadow-lg shadow-indigo-500/20 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+              >
+                {withdrawing ? <Loader2 className="w-5 h-5 animate-spin" /> : "Proses Pencairan"}
+              </button>
+            </form>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

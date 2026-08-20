@@ -36,6 +36,20 @@ export async function GET() {
        return timeB - timeA;
     });
 
+    // Fetch user's withdrawals
+    const withdrawalsSnapshot = await adminDb.collection("withdrawals")
+      .where("userId", "==", userId)
+      .get();
+      
+    let withdrawals = withdrawalsSnapshot.docs.map(doc => ({ _id: doc.id, ...doc.data() }));
+    
+    // Sort withdrawals manually
+    withdrawals.sort((a: any, b: any) => {
+       const timeA = a.createdAt?.toDate().getTime() || 0;
+       const timeB = b.createdAt?.toDate().getTime() || 0;
+       return timeB - timeA;
+    });
+
     // Calculate total stats
     const totalClicks = links.reduce((acc, link: any) => acc + (link.clicks || 0), 0);
 
@@ -47,6 +61,7 @@ export async function GET() {
         balance: user?.balance || 0,
       },
       links,
+      withdrawals,
       stats: {
         totalClicks
       }
