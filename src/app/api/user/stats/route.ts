@@ -3,6 +3,10 @@ import { getServerSession } from "next-auth/next";
 import { authOptions } from "@/app/api/auth/[...nextauth]/route";
 import { adminDb } from "@/lib/firebaseAdmin";
 
+// In-memory cache for dynamic rate
+let cachedRate = 15;
+let lastRateFetchTime = 0;
+
 export async function GET() {
   try {
     const session = await getServerSession(authOptions);
@@ -50,11 +54,26 @@ export async function GET() {
        return timeB - timeA;
     });
 
+    // Fetch dynamic rate
+    const now = Date.now();
+    if (now - lastRateFetchTime > 1000 * 60 * 10) {
+      try {
+        const settingsDoc = await adminDb.collection("settings").doc("system").get();
+        if (settingsDoc.exists) {
+          cachedRate = settingsDoc.data()?.ratePerClick || 15;
+        }
+        lastRateFetchTime = now;
+      } catch (e) {
+        console.error("Gagal mengambil rate", e);
+      }
+    }
+
     // Calculate total stats
     const totalClicks = links.reduce((acc, link: any) => acc + (link.clicks || 0), 0);
 
     return NextResponse.json({ 
       success: true, 
+      ratePerClick: cachedRate,
       user: {
         name: user?.name,
         email: user?.email,

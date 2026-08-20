@@ -9,6 +9,7 @@ import {
   LogOut, 
   Wallet, 
   MousePointerClick, 
+  Activity,
   Plus, 
   Copy, 
   ExternalLink, 
@@ -60,7 +61,7 @@ export default function Dashboard() {
       const res = await fetch("/api/user/stats");
       const data = await res.json();
       if (data.success) {
-        setStats({ user: data.user, totalClicks: data.stats.totalClicks });
+        setStats({ user: data.user, totalClicks: data.stats.totalClicks, ratePerClick: data.ratePerClick });
         setLinks(data.links || []);
         setWithdrawals(data.withdrawals || []);
       }
@@ -210,7 +211,7 @@ export default function Dashboard() {
 
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Stats Section */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
           <div className="bg-gradient-to-br from-indigo-900/50 to-slate-900/50 border border-indigo-500/20 rounded-2xl p-6 relative overflow-hidden">
             <div className="absolute -right-6 -top-6 w-32 h-32 bg-indigo-500/10 rounded-full blur-2xl" />
             <div className="flex items-center gap-4 mb-4">
@@ -244,6 +245,22 @@ export default function Dashboard() {
             </div>
             <p className="text-4xl font-bold text-white tracking-tight">
               {stats?.totalClicks || 0}
+            </p>
+          </div>
+
+          <div className="bg-gradient-to-br from-amber-900/50 to-slate-900/50 border border-amber-500/20 rounded-2xl p-6 relative overflow-hidden">
+            <div className="absolute -right-6 -top-6 w-32 h-32 bg-amber-500/10 rounded-full blur-2xl" />
+            <div className="flex items-center gap-4 mb-4">
+              <div className="p-3 bg-amber-500/20 rounded-xl text-amber-400">
+                <Activity className="w-6 h-6" />
+              </div>
+              <h2 className="text-lg font-medium text-slate-300">Rate Hari Ini</h2>
+            </div>
+            <p className="text-4xl font-bold text-white tracking-tight mb-2">
+              {formatCurrency(stats?.ratePerClick || 15)}
+            </p>
+            <p className="text-xs text-slate-400">
+              Per klik valid. Diperbarui setiap hari berdasar performa iklan.
             </p>
           </div>
         </div>

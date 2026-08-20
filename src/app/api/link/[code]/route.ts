@@ -1,6 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
 import { admin, adminDb } from "@/lib/firebaseAdmin";
 
+// In-memory cache for dynamic rate
+let cachedRate = 15;
+let lastRateFetchTime = 0;
+
 export async function GET(req: NextRequest, { params }: { params: Promise<{ code: string }> }) {
   try {
     const { code } = await params;
@@ -60,7 +64,21 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ code
 
     // Jika belum pernah klik, berikan saldo
     if (!hasClickedBefore) {
-      const EARNING_PER_CLICK = 15; // Rp 15 per click
+      const now = Date.now();
+      // Cache rate selama 10 menit untuk menghemat read Firestore
+      if (now - lastRateFetchTime > 1000 * 60 * 10) {
+        try {
+          const settingsDoc = await adminDb.collection("settings").doc("system").get();
+          if (settingsDoc.exists) {
+            cachedRate = settingsDoc.data()?.ratePerClick || 15;
+          }
+          lastRateFetchTime = now;
+        } catch (e) {
+          console.error("Gagal mengambil rate", e);
+        }
+      }
+      
+      const EARNING_PER_CLICK = cachedRate;
       
       const batch = adminDb.batch();
 
