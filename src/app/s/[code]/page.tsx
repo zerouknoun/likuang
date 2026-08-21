@@ -25,7 +25,7 @@ export default function WaitPage() {
     let interval: NodeJS.Timeout;
     
     const detectAdBlock = () => {
-      // Create a bait element that adblockers usually hide
+      // 1. Deteksi berbasis CSS (Browser Extensions seperti uBlock Origin)
       const bait = document.createElement('div');
       bait.innerHTML = '&nbsp;';
       bait.className = 'adsbox ad-placement doubleclick ad-placeholder ad-badge';
@@ -39,16 +39,31 @@ export default function WaitPage() {
       setTimeout(() => {
         if (!document.body.contains(bait)) return;
         const isBlocked = bait.offsetHeight === 0 || window.getComputedStyle(bait).display === 'none';
-        setIsAdBlockActive(isBlocked);
+        if (isBlocked) setIsAdBlockActive(true);
         bait.remove();
       }, 100);
+
+      // 2. Deteksi tingkat DNS/Network (AdGuard DNS, Pi-hole, dll)
+      const testImage = new Image();
+      testImage.onerror = () => setIsAdBlockActive(true);
+      testImage.src = "https://publishers.clickadilla.com/favicon.ico?_t=" + Date.now();
+
+      // 3. Deteksi Agresif (Brave Browser Shields & Strict Blockers)
+      // Brave sangat agresif memblokir request ke server Google Syndication
+      fetch("https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js", { 
+        method: 'HEAD', 
+        mode: 'no-cors',
+        cache: 'no-store' 
+      }).catch(() => {
+        setIsAdBlockActive(true);
+      });
     };
 
     // Initial check
     detectAdBlock();
     
     // Check periodically in case user disables it dynamically
-    interval = setInterval(detectAdBlock, 2000);
+    interval = setInterval(detectAdBlock, 2500);
 
     return () => clearInterval(interval);
   }, []);
