@@ -172,7 +172,7 @@ export default function WaitPage() {
   return (
     <div className="min-h-screen bg-slate-50 font-[family-name:var(--font-geist-sans)] text-slate-800 selection:bg-indigo-100 relative">
       <link rel="stylesheet" href="https://cdn.fluidplayer.com/v3/current/fluidplayer.min.css" type="text/css" />
-      <Script src="https://cdn.fluidplayer.com/v3/current/fluidplayer.min.js" strategy="lazyOnload" onLoad={initVideoAd} />
+      <Script src="https://cdn.fluidplayer.com/v3/current/fluidplayer.min.js" strategy="afterInteractive" onLoad={initVideoAd} />
       
       {/* AdBlock Warning Overlay */}
       {isAdBlockActive && (
