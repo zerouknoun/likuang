@@ -20,6 +20,7 @@ export default function WaitPage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [isAdBlockActive, setIsAdBlockActive] = useState(false);
+  const [isVideoFinished, setIsVideoFinished] = useState(false);
 
   useEffect(() => {
     let interval: NodeJS.Timeout;
@@ -83,7 +84,7 @@ export default function WaitPage() {
     // Initial check
     detectAdBlock();
     
-    // Check periodically in case user disables it dynamically
+    // Check periodically in case user disables/enables it dynamically
     interval = setInterval(detectAdBlock, 2500);
 
     return () => clearInterval(interval);
@@ -91,6 +92,7 @@ export default function WaitPage() {
 
   useEffect(() => {
     if (isAdBlockActive) return; // Pause timer when adblock is active
+    if (!isVideoFinished) return; // Pause timer if video hasn't finished!
 
     if (timeLeft > 0) {
       const timer = setTimeout(() => setTimeLeft(timeLeft - 1), 1000);
@@ -98,16 +100,18 @@ export default function WaitPage() {
     } else {
       setCanProceed(true);
     }
-  }, [timeLeft, isAdBlockActive]);
+  }, [timeLeft, isAdBlockActive, isVideoFinished]);
 
   const initVideoAd = () => {
     if (typeof window !== "undefined" && window.fluidPlayer) {
       try {
-        window.fluidPlayer('vast-video-player', {
+        const player = window.fluidPlayer('vast-video-player', {
           layoutControls: {
             fillToContainer: true,
             posterImage: 'https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?q=80&w=2564&auto=format&fit=crop', // Placeholder image
             playButtonShowing: true,
+            autoPlay: true, // Wajib autoplay
+            mute: true, // Wajib mute agar browser tidak memblokir autoplay
           },
           vastOptions: {
             adList: [
@@ -119,8 +123,25 @@ export default function WaitPage() {
             ]
           }
         });
+
+        // Event saat iklan VAST selesai diputar
+        player.on('adEnded', () => {
+          setIsVideoFinished(true);
+        });
+
+        // Event saat video utama mulai diputar (berarti iklan sudah selesai / tidak ada iklan)
+        player.on('playing', () => {
+          setIsVideoFinished(true);
+        });
+
+        // Fallback jika video utama selesai
+        player.on('ended', () => {
+          setIsVideoFinished(true);
+        });
+
       } catch (e) {
         console.error("Fluid Player Error:", e);
+        setIsVideoFinished(true); // Fallback agar user tidak stuck jika player error
       }
     } else {
       setTimeout(initVideoAd, 500); // Retry until script loads
@@ -292,11 +313,21 @@ export default function WaitPage() {
                 {error}
               </div>
             ) : !canProceed ? (
-              <div className="flex flex-col items-center p-6 bg-slate-50 rounded-2xl w-full max-w-sm border border-slate-200 shadow-inner">
-                <div className="text-6xl font-extrabold text-indigo-600 mb-2 font-mono">
+              <div className="flex flex-col items-center p-6 bg-slate-50 rounded-2xl w-full max-w-sm border border-slate-200 shadow-inner relative overflow-hidden">
+                {!isVideoFinished && (
+                  <div className="absolute inset-0 bg-slate-900/70 backdrop-blur-sm flex items-center justify-center z-10">
+                    <div className="flex flex-col items-center">
+                      <div className="w-8 h-8 border-4 border-indigo-500 border-t-transparent rounded-full animate-spin mb-3"></div>
+                      <p className="text-white font-bold text-center px-4 animate-pulse">
+                        Tonton Iklan Video <br/> Untuk Memulai Waktu
+                      </p>
+                    </div>
+                  </div>
+                )}
+                <div className={`text-6xl font-extrabold text-indigo-600 mb-2 font-mono transition-opacity duration-500 ${!isVideoFinished ? 'opacity-20' : 'opacity-100'}`}>
                   {timeLeft}
                 </div>
-                <div className="text-sm text-slate-500 font-bold uppercase tracking-widest">
+                <div className={`text-sm text-slate-500 font-bold uppercase tracking-widest transition-opacity duration-500 ${!isVideoFinished ? 'opacity-20' : 'opacity-100'}`}>
                   Seconds Remaining
                 </div>
               </div>
