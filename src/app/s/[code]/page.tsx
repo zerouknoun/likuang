@@ -50,13 +50,17 @@ export default function WaitPage() {
 
       // 2. Deteksi tingkat DNS/Network (AdGuard DNS, Pi-hole, dll)
       if (!blocked) {
-        const imageBlocked = await new Promise((resolve) => {
-          const testImage = new Image();
-          testImage.onload = () => resolve(false);
-          testImage.onerror = () => resolve(true);
-          testImage.src = "https://publishers.clickadilla.com/favicon.ico?_t=" + Date.now();
-        });
-        if (imageBlocked) blocked = true;
+        try {
+          // Menggunakan fetch no-cors sangat aman karena HTTP Error (seperti 404) tidak akan memicu catch.
+          // Catch hanya akan terpicu jika koneksi benar-benar diblokir oleh Adblock/DNS.
+          await fetch("https://publishers.clickadilla.com/backend/api/public/user-spots", { 
+            method: 'HEAD',
+            mode: 'no-cors', 
+            cache: 'no-store' 
+          });
+        } catch (e) {
+          blocked = true;
+        }
       }
 
       // 3. Deteksi Agresif (Brave Browser Shields & Strict Blockers)
