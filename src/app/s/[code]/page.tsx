@@ -207,6 +207,12 @@ export default function WaitPage() {
             <p className="text-slate-500 text-sm">Please wait for the timer to finish before proceeding.</p>
           </div>
 
+          {/* Video Ad HTML Space */}
+          <div id="video-ad-container" className="mb-8 w-full min-h-[250px] max-w-sm flex justify-center items-center overflow-hidden rounded-2xl bg-slate-100 border border-slate-200 relative shadow-inner">
+            <span className="absolute text-slate-400 text-sm font-medium z-0 text-center px-4">Advertisement</span>
+            {/* Ad Network script will target #video-ad-container */}
+          </div>
+
           <div className="min-h-[80px] w-full flex items-center justify-center">
             {error ? (
               <div className="text-red-600 bg-red-50 border border-red-200 px-6 py-4 rounded-xl font-medium w-full text-center">
