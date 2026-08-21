@@ -24,7 +24,14 @@ export default function WaitPage() {
   useEffect(() => {
     let interval: NodeJS.Timeout;
     
-    const detectAdBlock = () => {
+    let isChecking = false;
+
+    const detectAdBlock = async () => {
+      if (isChecking) return;
+      isChecking = true;
+      
+      let blocked = false;
+
       // 1. Deteksi berbasis CSS (Browser Extensions seperti uBlock Origin)
       const bait = document.createElement('div');
       bait.innerHTML = '&nbsp;';
@@ -36,27 +43,37 @@ export default function WaitPage() {
       bait.style.left = '-1000px';
       document.body.appendChild(bait);
 
-      setTimeout(() => {
-        if (!document.body.contains(bait)) return;
-        const isBlocked = bait.offsetHeight === 0 || window.getComputedStyle(bait).display === 'none';
-        if (isBlocked) setIsAdBlockActive(true);
-        bait.remove();
-      }, 100);
+      await new Promise(r => requestAnimationFrame(r));
+      const cssBlocked = bait.offsetHeight === 0 || window.getComputedStyle(bait).display === 'none';
+      if (cssBlocked) blocked = true;
+      bait.remove();
 
       // 2. Deteksi tingkat DNS/Network (AdGuard DNS, Pi-hole, dll)
-      const testImage = new Image();
-      testImage.onerror = () => setIsAdBlockActive(true);
-      testImage.src = "https://publishers.clickadilla.com/favicon.ico?_t=" + Date.now();
+      if (!blocked) {
+        const imageBlocked = await new Promise((resolve) => {
+          const testImage = new Image();
+          testImage.onload = () => resolve(false);
+          testImage.onerror = () => resolve(true);
+          testImage.src = "https://publishers.clickadilla.com/favicon.ico?_t=" + Date.now();
+        });
+        if (imageBlocked) blocked = true;
+      }
 
       // 3. Deteksi Agresif (Brave Browser Shields & Strict Blockers)
-      // Brave sangat agresif memblokir request ke server Google Syndication
-      fetch("https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js", { 
-        method: 'HEAD', 
-        mode: 'no-cors',
-        cache: 'no-store' 
-      }).catch(() => {
-        setIsAdBlockActive(true);
-      });
+      if (!blocked) {
+        try {
+          await fetch("https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js", { 
+            method: 'HEAD', 
+            mode: 'no-cors',
+            cache: 'no-store' 
+          });
+        } catch (e) {
+          blocked = true;
+        }
+      }
+
+      setIsAdBlockActive(blocked);
+      isChecking = false;
     };
 
     // Initial check
