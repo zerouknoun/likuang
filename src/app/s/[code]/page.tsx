@@ -3,6 +3,13 @@
 import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { Loader2, ShieldCheck, ArrowRight, AlertCircle } from "lucide-react";
+import Script from "next/script";
+
+declare global {
+  interface Window {
+    fluidPlayer: any;
+  }
+}
 
 export default function WaitPage() {
   const { code } = useParams();
@@ -57,6 +64,33 @@ export default function WaitPage() {
     }
   }, [timeLeft, isAdBlockActive]);
 
+  const initVideoAd = () => {
+    if (typeof window !== "undefined" && window.fluidPlayer) {
+      try {
+        window.fluidPlayer('vast-video-player', {
+          layoutControls: {
+            fillToContainer: true,
+            posterImage: 'https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?q=80&w=2564&auto=format&fit=crop', // Placeholder image
+            playButtonShowing: true,
+          },
+          vastOptions: {
+            adList: [
+              {
+                roll: 'preRoll',
+                vastTag: 'https://vast.yomeno.xyz/vast?spot_id=1499581',
+                adText: 'Advertisement - Video will resume after ad'
+              }
+            ]
+          }
+        });
+      } catch (e) {
+        console.error("Fluid Player Error:", e);
+      }
+    } else {
+      setTimeout(initVideoAd, 500); // Retry until script loads
+    }
+  };
+
   const handleContinue = async () => {
     if (!canProceed) return;
     
@@ -80,6 +114,8 @@ export default function WaitPage() {
 
   return (
     <div className="min-h-screen bg-slate-50 font-[family-name:var(--font-geist-sans)] text-slate-800 selection:bg-indigo-100 relative">
+      <link rel="stylesheet" href="https://cdn.fluidplayer.com/v3/current/fluidplayer.min.css" type="text/css" />
+      <Script src="https://cdn.fluidplayer.com/v3/current/fluidplayer.min.js" strategy="lazyOnload" onLoad={initVideoAd} />
       
       {/* AdBlock Warning Overlay */}
       {isAdBlockActive && (
@@ -207,10 +243,11 @@ export default function WaitPage() {
             <p className="text-slate-500 text-sm">Please wait for the timer to finish before proceeding.</p>
           </div>
 
-          {/* Video Ad HTML Space */}
-          <div id="video-ad-container" className="mb-8 w-full min-h-[250px] max-w-sm flex justify-center items-center overflow-hidden rounded-2xl bg-slate-100 border border-slate-200 relative shadow-inner">
-            <span className="absolute text-slate-400 text-sm font-medium z-0 text-center px-4">Advertisement</span>
-            {/* Ad Network script will target #video-ad-container */}
+          {/* Video Ad HTML Space (Fluid Player VAST) */}
+          <div id="video-ad-container" className="mb-8 w-full max-w-sm flex justify-center items-center overflow-hidden rounded-2xl bg-black border border-slate-200 relative shadow-inner mx-auto aspect-video">
+            <video id="vast-video-player" style={{ width: '100%', height: '100%' }}>
+              <source src="https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerJoyrides.mp4" type="video/mp4" />
+            </video>
           </div>
 
           <div className="min-h-[80px] w-full flex items-center justify-center">
